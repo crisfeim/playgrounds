@@ -1,0 +1,29 @@
+{
+  "configurations" : [
+    {
+      "id" : "2316603D-E880-4177-A15E-22C312519975",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:GuessTheFunko.xcodeproj",
+      "identifier" : "1B4FCC5029524833008C9A89",
+      "name" : "GuessTheFunkoUIKit"
+    }
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:GuessTheFunko.xcodeproj",
+        "identifier" : "40AAF27B2E2A72A7006D1E87",
+        "name" : "CoreLogicTests"
+      }
+    }
+  ],
+  "version" : 1
+}

@@ -1,0 +1,20 @@
+{
+  "name": "starter-bun-rescript-vanjs",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "serve": "bun --hot index.html",
+    "res:clean": "rescript clean",
+    "res:dev": "rescript -w",
+    "bundle": "bun build src/Entrypoint.mjs --outfile=dist/bundle.js",
+    "bundle:dev": "watchexec -w src -- bun run bundle",
+    "dev": "bun run serve & bun run res:dev",
+    "test": "bun test"
+  },
+  "private": true,
+  "devDependencies": {},
+  "dependencies": {
+    "@rescript/core": "^1.6.1",
+    "vanjs-core": "^1.5.5"
+  }
+}
