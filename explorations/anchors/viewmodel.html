@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<body>
+    <button id="commentBtn">Añadir comentario</button>
+    <div id="container" style="position: relative; width: 600px; height: 400px; border: 1px solid black;"></div>
+    <input id="commentInput" type="text" placeholder="Escribe tu comentario" style="position:absolute; display:none; z-index:10;"/>
+    
+    <script>
+      /* ============
+      Model
+      ============ */
+      const Comment = (x, y, username, content) => ({ x, y, username, content });
+      const CommentCommand = (x, y, username, content) => ({ x, y, username, content });
+      
+      /* ============
+      Store
+      ============ */
+      const MockCommentsStore = () => ({
+        load: async () => [
+          Comment(0.2,0.3,"crisfeim","Hello!"),
+          Comment(0.5,0.5,"swiftninja","nothing to say"),
+          Comment(0.7,0.2,"metalhead","nice")
+        ],
+        create: async (cmd) => Comment(cmd.x, cmd.y, cmd.username, cmd.content)
+      });
+      
+      /* ============
+      ViewModel
+      ============ */
+      const CommentsViewModel = (store) => {
+        let onLoadingChange = null;
+        let onCommentsChange = null;
+        let onCommentCreation = null;
+        
+        const load = async () => {
+          onLoadingChange?.(true);
+          const comments = await store.load();
+          onCommentsChange?.(comments);
+          onLoadingChange?.(false);
+        };
+        
+        const createComment = async (cmd) => {
+          onLoadingChange?.(true);
+          const comment = await store.create(cmd);
+          onLoadingChange?.(false);
+          onCommentCreation?.(comment);
+        };
+        
+        return {
+          load,
+          createComment,
+          setOnLoadingChange: cb => onLoadingChange = cb,
+          setOnCommentsChange: cb => onCommentsChange = cb,
+          setOnCommentCreation: cb => onCommentCreation = cb
+        };
+      };
+      
+      /* ============
+      ViewController
+      ============ */
+      const CommentsViewController = ({ container, commentBtn, commentInput }) => {
+        let onLoad = null;
+        let onInputCommit = null;
+        let commentMode = false;
+        
+        const toggleCommentMode = () => {
+          commentMode = !commentMode;
+          container.classList.toggle('comment-mode', commentMode);
+          commentBtn.textContent = commentMode ? 'Stop' : 'Añadir comentario';
+          if (!commentMode) commentInput.style.display = 'none';
+        };
+        
+        const setLoading = (isLoading) => { commentBtn.disabled = isLoading; };
+        
+        const addComments = (comments) => {
+          container.querySelectorAll('.marker').forEach(m => m.remove());
+          comments.forEach((c, i) => addComment(c));
+        };
+        
+        
+        const addComment = (c) => {
+          const div = document.createElement('div');
+          div.className = 'marker';
+          div.style.position = 'absolute';
+          div.style.left = (c.x * container.clientWidth - 12) + 'px';
+          div.style.top = (c.y * container.clientHeight - 12) + 'px';
+          div.textContent = c.content;
+          container.appendChild(div);
+        };
+        
+        const getRelativeCoords = (e) => {
+          const rect = container.getBoundingClientRect();
+          return { x: (e.clientX - rect.left)/rect.width, y: (e.clientY - rect.top)/rect.height };
+        };
+        
+        commentBtn.addEventListener('click', toggleCommentMode);
+        
+        container.addEventListener('click', (e) => {
+          if (!commentMode) return;
+          const coords = getRelativeCoords(e);
+          commentInput.style.left = (coords.x*container.clientWidth)+'px';
+          commentInput.style.top = (coords.y*container.clientHeight)+'px';
+          commentInput.value = '';
+          commentInput.style.display = 'block';
+          commentInput.focus();
+          
+          const onKey = async (ev) => {
+            if (ev.key === 'Enter' && commentInput.value.trim() !== '') {
+              onInputCommit?.(coords, commentInput.value.trim());
+              commentInput.style.display = 'none';
+              commentInput.removeEventListener('keydown', onKey);
+            } else if (ev.key === 'Escape') {
+              commentInput.style.display = 'none';
+              commentInput.removeEventListener('keydown', onKey);
+            }
+          };
+          
+          commentInput.addEventListener('keydown', onKey);
+        });
+        
+        const didLoad = async () => onLoad && await onLoad();
+        const setOnLoad = cb => { onLoad = cb; };
+        const setOnInputCommit = cb => { onInputCommit = cb; };
+        
+        return { setLoading, addComments, addComment, didLoad, setOnLoad, setOnInputCommit };
+      };
+      
+      /* ============
+      Composer
+      ============ */
+      const CommentsComposer = (store, container, commentBtn, commentInput) => {
+        const vc = CommentsViewController({ container, commentBtn, commentInput });
+        const vm = CommentsViewModel(store);
+        
+        vm.setOnLoadingChange(vc.setLoading);
+        vm.setOnCommentsChange(vc.addComments);
+        vm.setOnCommentCreation(c => c && vc.addComment(c));
+        
+        vc.setOnLoad(() => vm.load());
+        vc.setOnInputCommit(async (coords, text) => {
+          await vm.createComment(CommentCommand(coords.x, coords.y, 'anonymous', text));
+        });
+        
+        return vc;
+      };
+      
+      /* ============
+      App
+      ============ */
+      const store = MockCommentsStore();
+      const container = document.getElementById('container');
+      const commentBtn = document.getElementById('commentBtn');
+      const commentInput = document.getElementById('commentInput');
+      
+      const vc = CommentsComposer(store, container, commentBtn, commentInput);
+      vc.didLoad();
+      </script>
+  </body>
+</html>

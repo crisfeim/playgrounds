@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Code → Preview</title>
+<style>
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #0b0b0b;
+  color: #e5e5e5;
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  width: 900px;
+}
+
+.editor {
+  background: #111;
+  border-radius: 12px;
+  padding: 20px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre;
+  overflow: hidden;
+  position: relative;
+}
+
+.cursor {
+  display: inline-block;
+  width: 1px;
+  height: 1em;
+  background: #e5e5e5;
+  animation: blink 1s step-end infinite;
+  vertical-align: bottom;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+.preview-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview {
+  transition: background-color 300ms ease, padding 300ms ease;
+}
+
+.text {
+  font-size: 20px;
+}
+
+.p-4 {
+  padding: 1rem;
+}
+
+.bg-blue {
+  background: #3b82f6;
+  color: white;
+  border-radius: 8px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="editor"><span id="code"></span><span class="cursor"></span></div>
+  <div class="preview-wrapper">
+    <div id="preview" class="preview text">Hello</div>
+  </div>
+</div>
+
+<script>
+const steps = [
+  {
+    code: `Text("Hello")`,
+    classes: `text`
+  },
+  {
+    code: `
+Text("Hello")
+  .padding()
+`,
+    classes: `text p-4`
+  },
+  {
+    code: `
+Text("Hello")
+  .padding()
+  .background(.blue)
+`,
+    classes: `text p-4 bg-blue`
+  }
+]
+
+const codeEl = document.getElementById("code")
+const previewEl = document.getElementById("preview")
+
+let currentCode = ""
+let stepIndex = 0
+
+function type(text, i = 0) {
+  if (i < text.length) {
+    codeEl.textContent += text[i]
+    setTimeout(() => type(text, i + 1), 30)
+  } else {
+    setTimeout(nextStep, 600)
+  }
+}
+
+function nextStep() {
+  if (stepIndex >= steps.length) return
+
+  const step = steps[stepIndex]
+  const delta = step.code.replace(currentCode, "")
+  currentCode = step.code
+
+  previewEl.className = "preview " + step.classes
+  type(delta)
+
+  stepIndex++
+}
+
+nextStep()
+</script>
+
+</body>
+</html>

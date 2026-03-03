@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Code → Preview Animation - Smooth Transitions</title>
+<style>
+  :root {
+    --bg: #0b0b0c;
+    --panel: rgba(255,255,255,0.3);
+    --text: #e6e6eb;
+    --blue: #3b82f6;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden; 
+    height: 100vh;
+  }
+
+  .container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 900px;
+    max-width: 95vw;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .panel {
+    background: var(--panel);
+    padding: 20px;
+    min-height: 220px;
+    transition: all 0.4s ease; /* Suaviza cambios de tamaño del panel */
+  }
+
+  .code {
+    white-space: pre-wrap;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+    /* Transición para el efecto fade */
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  /* Estado cuando el código está cambiando */
+  .code.changing {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  .preview {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.4s ease;
+  }
+
+  .preview.changing {
+    opacity: 0.4;
+    filter: blur(2px);
+  }
+
+  /* Estilos internos de la preview */
+  #preview * {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .text {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont;
+    font-size: 18px;
+    color: white;
+  }
+
+  .p-4 { padding: 16px; }
+  .bg-blue { background: var(--blue); border-radius: 8px; }
+  
+  #preview { background: rgba(255, 255, 255, 0.1) }
+
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="panel">
+    <div id="code" class="code"></div>
+  </div>
+  <div id="preview" class="panel preview"></div>
+</div>
+
+<script>
+const steps = [
+  { code: 'Text("Hello")', html: '<div class="text">Hello</div>' },
+  { code: 'Text("Hello")\n  .background()', html: '<div class="text bg-blue">Hello</div>' },
+  { code: 'Text("Hello")\n  .padding()\n  .background(.blue)', html: '<div class="bg-blue p-4"><span class="text">Hello</span></div>' }
+];
+
+const codeEl = document.getElementById("code");
+const previewEl = document.getElementById("preview");
+
+let currentStep = 0;
+let scrollAccumulator = 0;
+const threshold = 120; // Un poco más sensible para que se sienta ágil
+let isAnimating = false;
+
+function showStep(index) {
+  if (isAnimating) return;
+  isAnimating = true;
+
+  // 1. Iniciar desvanecimiento
+  previewEl.classList.add('changing');
+
+  setTimeout(() => {
+    const step = steps[index];
+    
+    // 2. Cambiar contenido en el momento de mínima opacidad
+    codeEl.innerText = step.code;
+    previewEl.innerHTML = step.html;
+
+    previewEl.classList.remove('changing');
+    
+    setTimeout(() => { isAnimating = false; }, 300);
+  }, 250);
+}
+
+// Inicializar
+showStep(currentStep);
+
+window.addEventListener('wheel', (e) => {
+  if (isAnimating) return;
+  
+  scrollAccumulator += e.deltaY;
+
+  if (scrollAccumulator >= threshold) {
+    if (currentStep < steps.length - 1) {
+      currentStep++;
+      showStep(currentStep);
+    }
+    scrollAccumulator = 0;
+  } 
+  else if (scrollAccumulator <= -threshold) {
+    if (currentStep > 0) {
+      currentStep--;
+      showStep(currentStep);
+    }
+    scrollAccumulator = 0;
+  }
+});
+</script>
+
+</body>
+</html>
