@@ -1,0 +1,589 @@
+🧮 :
+	Algoritmo de Euclides:
+		Encuentra el minimo común divisor.
+		
+		```swift
+		func gcd(a: Int, b: Int) -> Int {
+			var a = abs(a)
+			var b = abs(b)
+				if b > a { swap(&a, &b) }
+				while b > 0 {
+						(a, b) = (b, a % b)
+				}
+				return a
+		}
+		```
+		
+		Ejemplo línea a línea;
+		
+		```swift
+		gcd(15, 12)
+		
+		a = abs(15) // a = 15
+		b = abs(12) // b = 12
+		
+		// No se ejecuta porque no es el caso
+		if b > a { haz algo } 
+		
+		// Mientras b sea mayor que cero
+		while b > 0 
+				
+				a = b // a = 12
+				b = a % b // b = 3
+				
+				// b sigue siendo mayor que cero
+			// Empieza otra vez el bucle
+				a = b // a = 3
+				b = a % b // b = 0
+				
+				// b ya no es mayor que cero
+			// Rompe el bucle
+				break
+			
+			// devuelve el último valor de a = 3
+			return a 
+		```
+	Promedio de un array numérico:
+		Implementar la función `average(table)`
+			
+			La función debe devolver el valor promedio de un array `table`
+			
+			`average()` debe devolver `0` si `table` está vacío
+			
+		Solución:
+			```swift
+			func average(_ table: [Double]) -> Double {
+							if table.count == 0 {
+											return 0.0
+							} else {
+											var average = Double()
+											var sum = Double()
+											for number in table {
+															sum += number
+											}
+											average = sum / Double(table.count)
+											return average
+							}
+			}
+			
+			let values = [Double]([0,1,2,3,4,6,7,8,9,10])
+			print(average(values)) // 5.0
+			```
+		
+	∑ de elementos de un intervalo de índices de un array:
+		Escriba el cuerpo de la función `calc(array, n1, n2)`
+			
+		* `array` es un array de enteros
+		* Los parámetros `n1` y `n2` son enteros
+		* `0 <= n1 <= n2 < array.length`
+					
+					La función `calc` debe devolver la suma de enteros de `array` del cual el índice pertenece al intervalo `[n1;n2]`
+			
+		Por ejemplo;
+			
+		```swift
+		var array = [1, 3, 4, 7, 9]
+		calc(array, 1,3) // 3 + 4 + 7 = 14
+		array = [0, 1, 2, 3, 4, 5, 3]
+		calc(array, 0,1) // 1
+		calc(array, 0, 5) // 15
+		calc(array, 0, 0) // 0
+		calc(array, 0, 6) // 18
+		calc(array, 0, 6) // 18
+		calc(array, 7,3) // Erreur: Idex out of range
+		```
+			
+		Solución:
+			```swift
+			func calc(_ array: [Int], _ n1: Int, _ n2: Int) -> Int {
+							var sum = Int()
+							if n1 <= 0 && n2 <= array.count {
+											var newArray = [Int]()
+											for i in n1...n2 {
+															let item = array[i]
+															newArray.append(item)
+											}
+											for i in newArray {
+															sum += newArray[i]
+											}
+							} else {
+											if n1 > n2 && n1 <= array.count {
+															print("Error: First number must be minor to second")
+											} else {
+															print("Error: Index out of range")
+											}
+							}
+									return sum
+			}
+			```
+	∑ de elementos de un intervalo de números de un array:
+		La función `sumRange` debería devolver la suma de los enteros del 1 al 100 presentes en un array.
+		Corregir el método `sumRange()`
+			
+		```swift
+			func sumRange(_ numbers: [Int]) -> Int {
+						var sum = 0
+						for i in 1..<numbers.count {
+										let n = numbers[i];
+										if(n >= 10 || n <= 100) {
+														sum += n
+										}
+						}
+						return sum
+			}
+		```
+			
+		Solución:
+			Error 1:
+			Tal cómo está implementada la función, no está teniendo en cuenta le primer elemento del array (la numeración es en base 0)
+			
+			Y la función empieza el bucle con el elemento número 1, es decir, el segundo elemento;
+			
+			```swift
+				//...
+				for i in 1..<numbers.count { ... }
+			```
+			
+			Por lo que para;
+			
+			```swift
+				let sum = sumRange([1,20,3,10,-2,100])
+			```
+			
+			Obtenemos `20+3+10-2+100` = `131` lo cual es incorrecto.
+			
+			Error 2:
+			La función ha de tomar en cuenta los números que están entre 1 y el 100, es decir los números mayores o iguales a 1 Y menores o iguales a cien `n >= 1 && n =< 100`.
+			
+			```swift
+			func sumRange(_ numbers: [Int]) -> Int {
+							var sum = 0
+							for i in 0..<numbers.count {
+											let n = numbers[i];
+											if(n >= 1 && n <= 100) {
+															sum += n
+											}
+							}
+							return sum
+				}
+			
+			let sum = sumRange([1,20,3,10,-2,100,-150,-5,200]) // 134
+			```
+	Número de elementos únicos:
+		Sol:
+			```swift
+			func countUnic(numbers: [Int]) -> Int {
+							let set = Set(numbers)
+							return set.count
+			}
+			```
+		Sol init:
+			```swift
+			func countUnic(numbers: [Int]) -> Int {
+					var frequencies = [Int:Int]()
+					for number in numbers {
+							if frequencies[number] == nil {
+									frequencies[number] = 1
+							} else {
+									frequencies[number]! += 1
+							}
+					}
+							return frequencies.count
+			}
+			```
+		Sol2:
+			```swift
+			func countUnic(numbers: [Int]) -> Int {
+					var set = Set<Int>()
+					for number in numbers {
+							set.insert(number)
+					}
+					return set.count
+			}
+			
+			countDistinct(numbers: [20, 10, 10, 30, 20]) // 3
+			
+			let array: Array<Int> = [1,3,2,4,6,1,3,2]
+			
+			countDistinct(numbers: array) // 5
+			```
+	Array contiene todos elementos de otro:
+		Ejercicio; Escribir una función que tome cómo parámetro un array y determine si ese array esta contenido en otro.
+		
+		Firma de la función:
+			```swift
+			contains(elements: [Element]) -> Bool
+			```
+		Uso:
+			```swift
+			["A", "B", "C", "D"].contains(elements: ["B", "D"]) // True
+			["A", "B", "C", "D"].contains(elements: ["B"]) // True
+			["A", "B", "C", "D"].contains(elements: ["B", "E"]) // False
+			```
+		Implementación básica:
+			```swift
+			extension Array where Element: Equatable {
+				func contains(elements: [Element]) -> Bool {
+					var bools: [Bool] = []
+					for item in self {
+						for element in elements {
+							bools.append(element == item)
+						}
+					}
+					return bools.filter { $0 }.count == elements.count
+				}
+			}
+			```
+		Pasos complementarios:
+			Podemos ir más lejos y hacer que nuestro algoritmo sea más eficiente haciendo unas cuantas verificaciones.
+			
+			La primera y más evidente es verificar que el array que llega por parámetro sea más pequeño o igual al array de base;
+			
+			```swift
+			guard elements.count >= self.count else { return false }
+			```
+			
+			Se podría dar el caso de que el array que llega por parámetro sea el mismo que el array de base;
+			
+			```swift
+			["A", "B", "C", "D"].contains(elements: ["A", "B", "C", "D"])
+			```
+			
+			En ese caso sería inútil continuar con la ejecución del programa. Podríamos crear una función que verifique si dos arrays son el mismo y ejecutarla en caso de que ambos array sean igual de largos;
+			
+			```swift
+			if elements.count == self.count && self.isEqualTo(elements) {
+				return true
+			}
+			```
+			
+			Podríamos también eliminar los duplicados para evitar iteraciones suplementarias innecesarias que además falseen el resultado;
+			
+			```swift
+			let array = self.removeDuplicates()
+			let elements = elements.removeDuplicates()
+			```
+			
+			Finalmente, en el bloque else de esa condición, podemos hacer que la función sea más eficaz, rompiendo el bucle en los casos en los que ambos elementos sean iguales;
+			
+			1. Al eliminar los duplicados en ambos arrays, estamos seguros de que cada elemento es único
+			2. Si un elemento del array básico es igual a otro del array comparado, no tiene sentido seguir iterando para los elementos que quedan, pues ya sabemos que va a ser diferente puesto que todos los elementos restantes van a ser únicos.
+			
+			```swift
+			["A", "B", "C", "D"].contains(elements: ["B", "D"])
+			
+			var bools: [Bool] = []
+			for item in self {
+				for element in elements {
+					bools.append(element == item)
+					if element == item { break }
+				}
+			}
+			return bools.filter { $0 }.count == elements.count
+			```
+		Última implementación a la fecha (25 jun 2021 a las 13:39):
+			```swift
+			func contains(_ elements: [Element]) -> Bool {
+											
+											guard elements.count >= self.count else { return false }
+											
+											let selfArray = self.removeDuplicates()
+											let array = elements.removeDuplicates()
+											
+											var bools: [Bool] = []
+											
+											for item in selfArray {
+															for element in array {
+																			if element == item {
+																							bools.append(element == item)
+																							break
+																			}
+															}
+											}
+											return bools.count == array.count
+			}
+			```
+		Discusión:
+			Es muy probable que haya una mejor manera de hacer las cosas; Un bucle dentro de un bucle es bastante costoso en términos de computación.
+	Eliminar duplicados de un array sin conservar el orden:
+		Puesto que un set es una colección desordenada de items únicos, podemos eliminar los elementos duplicados de un array transformándolos en un set (si no necesitamos conservar el orden)
+		
+		Implementación:
+			```swift
+			extension Array where Element: Hashable {
+							func removeDuplicates() -> [Element] {
+											return Array(Set(self))
+							}
+			}
+			```
+		
+		Uso:
+			```swift
+			var array = ["A", "B", "C", "D", "D"]
+			array.removeDuplicates() // ["A", "D", "B", "C"]
+			```
+		
+		Discusión:
+			Este método sólo funciona si el elemento se conforma al protocolo Hashable.
+	Eliminar los N primeros caracteres de un string:
+		```swift
+		import Foundation
+		
+		func remove(input: String, first: Int, last: Int) String {
+				let total = first + last
+				var input = input
+				
+				if total == input.count || total > input.count {
+						return ""
+				} else {
+						if first > 0 {
+								for _ in 1...first {
+										input.removeFirst()
+								}
+						} else {print("first = 0")}
+						
+						if last > 0 {
+								for _ in 1...last {
+										input.removeLast()
+								}
+						} else {print("last = 0")}
+						return input
+				}
+		}
+		```
+	Eliminar los N primeros elementos de un array:
+		```swift
+		func removeElements(array: [Int], n: Int) [Int] {
+				var newArray = array
+				for _ in 1...n {
+						newArray.remove(at: 0)
+				}
+				return newArray
+		}
+		
+		var array : [Int] = [1,2,3,4,5,6,7]
+		removeElements(array: array, n: 4) // 5, 6, 7, 8
+		```
+	Encontrar intervalo más pequeño entre los elementos de un array de enteros:
+		Implementar la función `findSmallestInterval(numbers)` que devuelve el intervalo positivo más pequeño entre dos elementos de un array de números.
+		
+		Por ejemplo, para el array `[1,6,4,8,2]` el intervalo más pequeño es 1 (la diferencia entre 1 y 2);
+		
+		Restricciones:
+			- El array contiene al menos dos elementos y un máximo de 100k
+			- La diferencia entre dos elementos no superará nunca la capacidad de un entero
+		Solución:
+			El intervalo más pequeño puede ser uno de estos dos;
+				- La diferencia entre los dos números más pequeños
+				- La diferencia entre los dos números más grandes
+			
+			```swift
+			var numbers = [1, 6, 4, 8, 3, 9]
+			
+			func findSmallestInterval(_ numbers: [Int]) -> Int? {
+							if numbers.count > 2 && numbers.count < 100000 {
+											var numbers = numbers
+											var smallestArray = [Int]()
+											var greatesArray = [Int]()
+											for _ in 0...1 {
+															let smallestNumberInsideTable = numbers.min()
+															smallestArray.append(smallestNumberInsideTable!)
+															let smallestNumberIndex = numbers.firstIndex(of: smallestNumberInsideTable!)
+															numbers.remove(at: smallestNumberIndex!)
+															let greatestNumberInsideTable = numbers.max()
+															greatesArray.append(greatestNumberInsideTable!)
+															let greatestNumberIndex = numbers.firstIndex(of: greatestNumberInsideTable!)
+															numbers.remove(at: greatestNumberIndex!)
+											}
+											var a = smallestArray.max()! - smallestArray.min()!
+											var b = greatesArray.max()! - greatesArray.min()!
+											
+											if a > b {swap(&a,&b)}
+											return a
+							} else {
+											print("Error, le tableau doit avoir au menos 2 éléments et menos de 100000")
+											return nil
+							}
+			}
+			```
+	Encontrar el valor más cercano a cero:
+		Analizar un informe de temperaturas para encontrar la que se acerca más al cero.
+		
+		Restricciones;
+		- Si el array está vacío, la función deberá devolver 0
+		- 0 ≤ tamaño de ts ≤ 10000
+		- Si dos temperaturas están igual de cerca de cero, devolver la positiva (ej; -5° vs 5° devuelve 5°)
+		
+		Solución:
+			1. Encontrar el valor más pequeño puesto que sería el valor más cercano que cero.
+			2. Sin embargo, dado que hay números negativos, el valor más pequeño no es necesariamente el más cercano de cero.
+			3. Transformar los números del array en valores absolutos.
+			
+			```swift
+			func computeClosestToZero(ts: [Int]) -> Int {
+			var closestToZero = Int()
+			if ts.count > 0 {
+			var newArray = [Int]()
+			for t in ts {
+							let t = abs(t)
+							newArray.append(t)
+			}
+			closestToZero = newArray.min()!
+			}
+			return closestToZero
+			}
+			```
+		
+		Revisión 2023;
+			```swift
+			func computeClosestToZero(_ ts: [Int]) -> Int {
+				guard ts.count != 0 else { return 0 }
+				let absTs = ts.map {abs($0)}
+				return absTs.min() ?? 0
+			}
+			```
+	Estimar pi con el método MonteCarlo:
+		Cálculo de una estimación del número π (pi).
+		
+		Método;
+		- Punto P al azar (x,y) tal que 0 ≤ x ≤ 1 y 0 ≤ y ≤ 1.
+		- Si x² + y² ≤ 1, el punto está dentro del cuadrante del circulo de radio 1.
+		- Probabilidad de estar en el interior es π/4.
+		
+		Solución:
+			Pasos;
+			1. Circunferencia de radio 1 (Área = π).
+			2. Recinto cuadrado de lado 2 (Área = 4).
+			3. π/4 = Puntos dentro / Puntos totales; π = (Puntos dentro / Puntos totales) * 4.
+			
+			```swift
+			import Foundation
+			
+			func approx(pts: [[Double]]) -> Double {
+							var piEstimation = Double()
+							var totalPoints = pts.count
+							var ptsInside = [[Double]]()
+							for pt in pts {
+											let sum = sumValues(pt)
+											if sum <= 1 {
+															ptsInside.append(pt)
+											}
+							}
+							piEstimation = 4 * Double(ptsInside.count) / Double(totalPoints)
+							return piEstimation
+			}
+			
+			func sumValues(_ array: [Double]) -> Double {
+							var sum = Double()
+							for number in array {
+											var n = number
+											n = pow(n,2)
+											sum += n
+							}
+							return sum
+			}
+			```
+	Obtener número de repeticiones de un número dentro de un Array:
+		Frecuencia de números;
+		La función `frequency(numbers: [Int]) [Int:Int]` devuelve un diccionario con la frecuencia de aparición.
+		
+		Lógica:
+			- Variable Frecuencias tipo diccionario.
+			- Por cada elemento; si ya existe, sumar 1; si es nuevo, definir frecuencia como 1.
+		
+		```swift
+		func frequency(numbers: [Int]) [Int:Int] {
+			var frequencies = [Int:Int]()
+			for number in numbers {
+				if let count = frequencies[number] {
+					frequencies[number] = count + 1
+				}
+				else {
+					frequencies[number] = 1
+				}
+			}
+			return frequencies
+		}
+		```
+	Descent, Codingame:
+		Destruir la montaña más alta antes de colisionar.
+		
+		Lógica:
+			- Conocer la altura y el índice de cada montaña.
+			- Definir variables vacías para maxH y targetIndex.
+			- Iterar comparando si la altura actual es mayor a la almacenada.
+		
+		```swift
+		while true {
+				var maxH = 0
+				var targetIndex = 0
+				for i in 0...7 {
+					let mountainH = Int(readLine()!)! 
+					if maxH < mountainH {
+						maxH = mountainH
+						targetIndex = i
+					}
+				}
+				print(targetIndex);
+		}
+		```
+	Verificar presencia de un número en un array de enteros:
+		Verificar la presencia de un número en un array ordenado.
+		
+		Restricciones:
+			- Enteros ordenados de menor a mayor.
+			- Hasta 1M de elementos.
+		
+		Solución:
+			```swift
+			func existsInArray(_ numbers: [Int], _ k: Int) -> Bool {
+							var exits = false
+							if let _ = numbers.firstIndex(of: k) {
+											exits = true
+							}
+							return exits
+			}
+			```
+	Verificar si es palíndromo:
+		La función `isPalindrome` verifica si un String es un palíndromo y es sensible a las mayúsculas;
+		
+		```swift
+		import Foundation
+		
+		func isPalindrome(input: String) -> Bool {
+				input == String(input.reversed())
+		}
+		
+		isPalindrome(input: "taCoCat") // Returns true
+		isPalindrome(input: "TaCoCAt") // Returns false
+		```
+	Eliminar elementos repetidos de un array conservando el orden:
+		Implementar la función `filterDuplicates(data)` que toma un array `data` y devuelve un array que contiene los valores de `data` sin los valores repetidos. El orden inicial debe de ser conservado.
+		
+		Ejemplo;
+		```swift
+		[7 3 6 4 3 3 4 9] => [7 3 6 4 9]
+		```
+		
+		Restricciones:
+			- `data` nunca es `nil`
+		Solución:
+			Si el elemento existe, entonces podremos usar el método `firstIndexOf` sino, entonces no podremos pero podremos añadirlo a un nuevo array;
+			
+			```swift
+			func filterDuplicates(data: [Int]) -> [Int] {
+							var newData = [Int]()
+							for number in data {
+											if let firstIndex = newData.firstIndex(of: number) {
+															print("\(number) is already present at \(firstIndex)")
+											} else {
+															newData.append(number)
+											}
+							}
+							return newData
+			}
+			
+			let data = [7,3,6,4,3,3,4,9] 
+			
+			filterDuplicates(data: data) // [7, 3, 6, 4, 9]
+			```

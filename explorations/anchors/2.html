@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Comentarios tipo Vercel</title>
+<style>
+  body {
+    margin: 0;
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+
+  #commentBtn {
+    margin-bottom: 20px;
+    padding: 8px 16px;
+    cursor: pointer;
+  }
+
+  #container {
+    position: relative;
+    width: 80%;
+    height: 400px;
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+  }
+
+  #container.comment-mode {
+    cursor: crosshair;
+  }
+
+  .marker {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #0070f3;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;
+    pointer-events: none;
+  }
+
+  #commentInput {
+    position: absolute;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+
+<button id="commentBtn">Añadir comentario</button>
+<div id="container"></div>
+
+  <script>
+    const container = document.getElementById('container');
+    const commentBtn = document.getElementById('commentBtn');
+    
+    // Array de comentarios "reactivo" con comentarios predefinidos
+    const comments = [
+      { x: 0.2, y: 0.3, text: 'Primera observación' },
+      { x: 0.5, y: 0.5, text: 'Comentario en el centro' },
+      { x: 0.7, y: 0.2, text: 'Otro comentario aquí' }
+    ];
+    
+    let commentMode = false;
+    let currentInput = null;
+    
+    // Activar/desactivar modo comentario
+    commentBtn.addEventListener('click', () => {
+      commentMode = !commentMode;
+      container.classList.toggle('comment-mode', commentMode);
+      commentBtn.textContent = commentMode ? 'Modo comentario activo' : 'Añadir comentario';
+    });
+    
+    // Calcular coordenadas relativas
+    function getRelativeCoords(e) {
+      const rect = container.getBoundingClientRect();
+      const x = (e.clientX - rect.left + container.scrollLeft) / rect.width;
+      const y = (e.clientY - rect.top + container.scrollTop) / rect.height;
+      return { x, y };
+    }
+    
+    // Renderizar todos los comentarios
+    function renderComments() {
+      container.querySelectorAll('.marker').forEach(m => m.remove());
+      comments.forEach((c, i) => {
+        const marker = document.createElement('div');
+        marker.className = 'marker';
+        marker.style.left = (c.x * container.clientWidth - 12) + 'px';
+        marker.style.top = (c.y * container.clientHeight - 12) + 'px';
+        marker.textContent = i + 1; // numeración simple
+        container.appendChild(marker);
+      });
+    }
+    
+    // Renderizar comentarios iniciales
+    renderComments();
+    
+    // Manejo de click en modo comentario
+    container.addEventListener('click', e => {
+      if (!commentMode) return;
+      if (currentInput) return; // evitar múltiples inputs
+      
+      const coords = getRelativeCoords(e);
+      
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.id = 'commentInput';
+      input.placeholder = 'Escribe tu comentario';
+      input.style.left = (coords.x * container.clientWidth) + 'px';
+      input.style.top = (coords.y * container.clientHeight) + 'px';
+      container.appendChild(input);
+      input.focus();
+      currentInput = input;
+      
+      input.addEventListener('keydown', ev => {
+        if (ev.key === 'Enter' && input.value.trim() !== '') {
+          comments.push({ x: coords.x, y: coords.y, text: input.value.trim() });
+          input.remove();
+          currentInput = null;
+          renderComments();
+        } else if (ev.key === 'Escape') {
+          input.remove();
+          currentInput = null;
+        }
+      });
+    });
+    
+    // Re-renderizar al hacer resize
+    window.addEventListener('resize', renderComments);
+  </script>
+</body>
+</html>

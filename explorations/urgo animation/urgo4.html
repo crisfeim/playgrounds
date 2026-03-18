@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Divider Reveal</title>
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: black;
+  }
+
+  .container {
+    position: relative;
+    width: 280px;
+    height: 661px;
+  }
+  
+  .container {
+    position: relative;
+    width: 280px;
+    height: 661px;
+    perspective: 800px;           /* perspectiva para la rotación 3D */
+    transform-style: preserve-3d;
+    animation: rotateLoop 8s infinite linear;  /* animación de rotación */
+  }
+
+  @keyframes rotateLoop {
+    0%   { transform: perspective(800px) rotateX(30deg) rotateY(-30deg); }
+    25%  { transform: perspective(800px) rotateX(30deg) rotateY(30deg); }
+    50%  { transform: perspective(800px) rotateX(-30deg) rotateY(30deg); }
+    75%  { transform: perspective(800px) rotateX(-30deg) rotateY(-30deg); }
+    100% { transform: perspective(800px) rotateX(30deg) rotateY(-30deg); }
+  }
+  /* Esqueleto rojo */
+  .skeleton, .app {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .skeleton rect {
+    fill: red;
+  }
+
+  .app rect {
+    fill: white;
+  }
+
+  /* Divider visible */
+  .divider {
+    position: absolute;
+    top: 0;
+    width: 8px;
+    height: 100%;
+    background: linear-gradient(to bottom, #DCDFE0, #B7BBBE);
+    z-index: 10;
+  }
+
+  /* Animación sincronizada */
+  @keyframes moveDivider {
+    0%   { left: 0%; }
+    50%  { left: calc(100% - 8px); }
+    100% { left: 0%; }
+  }
+
+  @keyframes revealApp {
+    0%   { clip-path: polygon(0 0, 0 0, 0 100%, 0 100%); }
+    50%  { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+    100% { clip-path: polygon(0 0, 0 0, 0 100%, 0 100%); }
+  }
+
+  .divider {
+    animation: moveDivider 4s infinite ease-in-out;
+  }
+  
+  .divider {
+    position: absolute;
+    top: -20px;       /* sobresale 20px por arriba */
+    width: 8px;
+    height: calc(100% + 40px);  /* altura del container + 20px arriba + 20px abajo */
+    background: linear-gradient(to bottom, #DCDFE0, #B7BBBE);
+    z-index: 10;
+    animation: moveDivider 4s infinite ease-in-out;
+  }
+
+  .app {
+    animation: revealApp 4s infinite ease-in-out;
+  }
+  
+  
+</style>
+</head>
+<body>
+<div class="container">
+  <svg class="skeleton" viewBox="0 0 280 661" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="280" height="661"/>
+  </svg>
+
+  <svg class="app" viewBox="0 0 280 661" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="280" height="661"/>
+  </svg>
+
+  <div class="divider"></div>
+</div>
+</body>
+</html>

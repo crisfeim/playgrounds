@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Posts</title>
+</head>
+<body>
+
+<script type="module">
+	/* ============
+	   Model
+	   ============ */
+	class Post {
+		constructor(id, title, body) {
+			this.id = id;
+			this.title = title;
+			this.body = body;
+		}
+	}
+
+	/* ============
+	   Loader (protocol implícito)
+	   ============ */
+	class JSONPlaceholderPostLoader {
+		async loadPosts() {
+			const res = await fetch('https://jsonplaceholder.typicode.com/posts');
+			const data = await res.json();
+			return data.map(p => new Post(p.id, p.title, p.body));
+		}
+	}
+
+	/* ============
+	   ViewModel (stateless)
+	   ============ */
+	class PostViewModel {
+		constructor(postLoader) {
+			this.postLoader = postLoader;
+			this.onLoadingChange = null;
+			this.onPostsChange = null;
+		}
+
+		async load() {
+			this.onLoadingChange?.(true);
+			const posts = await this.postLoader.loadPosts();
+			this.onPostsChange?.(posts);
+			this.onLoadingChange?.(false);
+		}
+	}
+
+	/* ============
+	   ViewController (dueño de la vista)
+	   ============ */
+	class PostsViewController {
+		constructor() {
+			this.root = document.createElement('div');
+
+			this.loadingEl = document.createElement('div');
+			this.loadingEl.textContent = 'Loading...';
+			this.loadingEl.style.display = 'none';
+
+			this.listEl = document.createElement('ul');
+
+			this.root.appendChild(this.loadingEl);
+			this.root.appendChild(this.listEl);
+
+			this.onLoad = null;
+		}
+
+		viewDidLoad() {
+			this.onLoad?.();
+		}
+
+		setLoading(isLoading) {
+			this.loadingEl.style.display = isLoading ? 'block' : 'none';
+		}
+
+		setPosts(posts) {
+			this.listEl.innerHTML = '';
+			posts.forEach(post => {
+				const li = document.createElement('li');
+				li.textContent = post.title;
+				this.listEl.appendChild(li);
+			});
+		}
+	}
+
+	/* ============
+	   Composer
+	   ============ */
+	class PostsComposer {
+		static make(postLoader) {
+			const vc = new PostsViewController();
+			const vm = new PostViewModel(postLoader);
+
+			vm.onLoadingChange = isLoading => vc.setLoading(isLoading);
+			vm.onPostsChange = posts => vc.setPosts(posts);
+
+			vc.onLoad = () => vm.load();
+
+			return vc;
+		}
+	}
+
+	const vc = PostsComposer.make(new JSONPlaceholderPostLoader());
+
+	document.body.appendChild(vc.root);
+	vc.viewDidLoad();
+</script>
+
+</body>
+</html>

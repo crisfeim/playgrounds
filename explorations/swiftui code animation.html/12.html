@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>SwiftUI Preview - Contextual Scroll</title>
+<style>
+  :root {
+    --bg: #0b0b0c;
+    --panel: rgba(255,255,255,0.3);
+    --text: #e6e6eb;
+    --blue: #3b82f6;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 900px;
+    max-width: 95vw;
+    background: #1a1a1b;
+    overflow: hidden;
+    cursor: ns-resize; /* Indica que se puede scrollear */
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    height: 300px;
+  }
+
+  .panel {
+    background: var(--panel);
+    padding: 20px;
+    min-height: 220px;
+  }
+
+  .code {
+    white-space: pre-wrap;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  .preview {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.3s ease-out;
+  }
+
+  .preview.changing {
+    opacity: 0;
+  }
+
+  .text {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont;
+    font-size: 18px;
+    color: white;
+  }
+
+  .p-4 { padding: 8px; }
+  .bg-blue { background: var(--blue); border-radius: 8px; }
+  
+  #preview { background: rgba(255, 255, 255, 0.1) }
+  
+  #preview svg {
+    display: block;
+    margin: auto;
+    /* Evita que el SVG se comporte como texto y herede el line-height */
+    pointer-events: none; 
+  }
+</style>
+</head>
+<body>
+
+<div class="container" id="main-container">
+  <div class="panel">
+    <div id="code" class="code"></div>
+  </div>
+  <div id="preview" class="panel preview"></div>
+</div>
+
+<script>
+  let svg = `
+<svg width="228px" height="229px" viewBox="0 0 228 229" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <g id="crisfe.im" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+    <g id="interactive" transform="translate(-603, -289)">
+      <g id="Grupo" transform="translate(603, 289)">
+        <rect id="Rectángulo" fill="#D8D8D8" x="0" y="0" width="228" height="229"></rect>
+        <text id="testing" font-family="HelveticaNeue-Bold, Helvetica Neue" font-size="27" font-weight="bold" letter-spacing="0.027" fill="#FFFFFF" fill-opacity="0.9">
+          <tspan x="78" y="122">Hello</tspan>
+        </text>
+      </g>
+    </g>
+  </g>
+</svg>`
+  
+  
+const steps = [
+  { code: 'Text("Hello")', html: '<div class="text">Hello</div>' },
+  { code: 'Text("Hello")\n  .background()', html: '<div class="text bg-blue">Hello</div>' },
+  { code: 'Text("Hello")\n  .padding()\n  .background(.blue)', html: '<div class="bg-blue p-4"><span class="text">Hello</span></div>' },
+  { code: 'VStack { Text("Hello") }\n .frame(width: 228)\n .frame(height: 228)\n .background(.gray)', html: svg }
+];
+
+const container = document.getElementById("main-container");
+const codeEl = document.getElementById("code");
+const previewEl = document.getElementById("preview");
+
+let currentStep = 0;
+let scrollAccumulator = 0;
+const threshold = 120;
+let isAnimating = false;
+
+function showStep(index) {
+  if (isAnimating) return;
+  isAnimating = true;
+
+  previewEl.classList.add('changing');
+  codeEl.innerText = steps[index].code;
+
+  setTimeout(() => {
+    previewEl.innerHTML = steps[index].html;
+    previewEl.classList.remove('changing');
+    setTimeout(() => { isAnimating = false; }, 300);
+  }, 250);
+}
+
+// Inicialización
+showStep(currentStep);
+
+container.addEventListener('wheel', (e) => {
+  e.preventDefault();
+
+  if (isAnimating) return;
+  
+  scrollAccumulator += e.deltaY;
+
+  if (scrollAccumulator >= threshold) {
+    if (currentStep < steps.length - 1) {
+      currentStep++;
+      showStep(currentStep);
+    }
+    scrollAccumulator = 0;
+  } 
+  else if (scrollAccumulator <= -threshold) {
+    if (currentStep > 0) {
+      currentStep--;
+      showStep(currentStep);
+    }
+    scrollAccumulator = 0;
+  }
+}, { passive: false });
+</script>
+
+</body>
+</html>

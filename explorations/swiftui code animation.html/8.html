@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Code → Preview Animation</title>
+<style>
+  :root {
+    --bg: #0b0b0c;
+    --panel: rgba(255,255,255,0.3);
+    --text: #e6e6eb;
+    --blue: #3b82f6;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: var(--bg);
+    color: var(--text);
+    height: 4000px; /* suficiente para poder scrollear */
+  }
+
+  .container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 900px;
+    max-width: 95vw;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+  .panel {
+    background: var(--panel);
+    padding: 20px;
+    min-height: 220px;
+  }
+
+  .code {
+    white-space: pre-wrap;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  .preview {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+  }
+
+  .text {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont;
+    font-size: 18px;
+    color: white;
+  }
+
+  .p-4 { padding: 16px; }
+  .bg-blue { background: var(--blue); border-radius: 8px; }
+  
+  #preview { background: rgba(255, 255, 255, 0.1) }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="panel">
+    <div id="code" class="code"></div>
+  </div>
+  <div id="preview" class="panel preview"></div>
+</div>
+
+<script>
+const steps = [
+  { code: 'Text("Hello")', html: '<div class="text">Hello</div>' },
+  { code: 'Text("Hello")\n  .background()', html: '<div class="text bg-blue">Hello</div>' },
+  { code: 'Text("Hello")\n  .padding()\n  .background(.blue)', html: '<div class="bg-blue p-4"><span class="text">Hello</span></div>' }
+];
+
+const repeatAnimation = true;
+const triggerDistance = 200;
+let currentStep = 0;
+let lastTriggerY = 0;
+
+const codeEl = document.getElementById("code");
+const previewEl = document.getElementById("preview");
+
+function showStep(step) {
+  codeEl.innerText = step.code;
+  previewEl.innerHTML = step.html;
+}
+
+function nextStep() {
+  currentStep++;
+  if (currentStep >= steps.length) {
+    if (repeatAnimation) {
+      currentStep = 0;
+    } else {
+      return;
+    }
+  }
+  showStep(steps[currentStep]);
+}
+
+showStep(steps[currentStep]);
+
+window.addEventListener('scroll', () => {
+  const scrollY = window.scrollY;
+  if (scrollY - lastTriggerY >= triggerDistance) {
+    lastTriggerY += triggerDistance;
+    nextStep();
+  }
+});
+</script>
+
+</body>
+</html>

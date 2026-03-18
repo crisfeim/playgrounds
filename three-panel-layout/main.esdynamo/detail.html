@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+	<meta charset="UTF-8">
+	
+	<title></title>
+	
+	<link rel="stylesheet" href="css/bear.css"/>
+	<link rel="stylesheet" href="css/layout.css"/>
+	
+	<style>
+	@media (max-width:768px) {
+		#nav-toggle, #menu-toggle {
+			left: 0;
+		}
+		#nav-checkbox:checked + #nav-toggle,
+		#nav-checkbox:checked ~ main {
+			left: 100%;
+		}
+		
+		#nav-checkbox:checked ~ #menu-toggle {
+			left: 0 !important;
+		}
+		
+		#menu-toggle:checked ~ nav {
+			left: 100% !important;
+		}
+	}
+	</style>
+</head>
+<body>
+	<!-- @include checkboxes -->
+	<menu><!-- @include menu-content --></menu>
+	<nav><!-- @include nav-content --></nav>
+	<main><!-- @include article --></main>
+</body>
+</html>

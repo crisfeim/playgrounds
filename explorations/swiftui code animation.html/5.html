@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Code + Preview Animation</title>
+<style>
+  body { font-family: monospace; display: flex; gap: 40px; padding: 40px; }
+  pre { background: #111; color: #0f0; padding: 20px; border-radius: 8px; min-width: 200px; white-space: pre-wrap; }
+  .preview { border: 1px solid #ccc; padding: 20px; min-width: 200px; display: flex; justify-content: center; align-items: center; min-height: 80px; transition: all 0.3s ease; }
+  .text { display: inline-block; }
+  .p-4 { padding: 16px; }
+  .bg-blue { background: #3b82f6; color: white; }
+</style>
+</head>
+<body>
+
+<pre id="code"></pre>
+<div class="preview" id="preview"></div>
+
+<script>
+const steps = [
+  { codeLines: ['Text("Hello")'], view: () => `<div class="text">Hello</div>` },
+  { codeLines: ['Text("Hello")', '  .background(.blue)'], view: () => `<div class="text bg-blue">Hello</div>` },
+  { codeLines: ['Text("Hello")', '  .padding()', '  .background(.blue)'], view: () => `<div class="bg-blue p-4"><span class="text">Hello</span></div>` }
+];
+
+const codeEl = document.getElementById('code');
+const previewEl = document.getElementById('preview');
+
+async function typeStep(step, accumulatedLines) {
+  for (let i = 0; i < step.codeLines.length; i++) {
+    const line = step.codeLines[i];
+    if (accumulatedLines[i] === line) continue;
+    for (let j = 0; j < line.length; j++) {
+      codeEl.textContent += line[j];
+      await new Promise(r => setTimeout(r, 40));
+    }
+    codeEl.textContent += "\n";
+    accumulatedLines[i] = line;
+  }
+  previewEl.innerHTML = step.view();
+  return [...accumulatedLines];
+}
+
+async function run() {
+  let accumulated = [];
+  for (const step of steps) {
+    accumulated = await typeStep(step, accumulated);
+    await new Promise(r => setTimeout(r, 500));
+  }
+}
+
+run();
+</script>
+</body>
+</html>

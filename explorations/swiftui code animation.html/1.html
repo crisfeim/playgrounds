@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Code → Preview Animation</title>
+<style>
+  :root {
+    --bg: #0b0b0c;''
+    --panel: rgba(255,255,255,0.3);
+    --text: #e6e6eb;
+    --muted: #9a9aa1;
+    --blue: #3b82f6;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  .container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    width: 900px;
+    max-width: 95vw;
+  }
+
+  .panel {
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 20px;
+    min-height: 220px;
+  }
+
+  /* CODE PANEL */
+
+  .code {
+    white-space: pre;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+    position: relative;
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 8px;
+    background: var(--text);
+    margin-left: 2px;
+    animation: blink 1s steps(1) infinite;
+    height: 1em;
+    vertical-align: bottom;
+  }
+
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+
+  /* PREVIEW PANEL */
+
+  .preview {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .preview.updating {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+
+  .text {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont;
+    font-size: 18px;
+    color: white;
+  }
+
+  .p-4 {
+    padding: 16px;
+  }
+
+  .bg-blue {
+    background: var(--blue);
+    border-radius: 8px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="panel">
+    <div id="code" class="code"></div>
+  </div>
+
+  <div class="panel preview" id="preview"></div>
+</div>
+
+<script>
+const steps = [
+  {
+    code: `Text("Hello")`,
+    html: `<div class="text">Hello</div>`
+  },
+  {
+    code: `
+Text("Hello")
+  .background()
+`,
+    html: `<div class="text bg-blue">Hello</div>`
+  },
+  {
+    code: `
+Text("Hello")
+  .padding()
+  .background(.blue)
+`,
+    html: `<div class="text p-4 bg-blue">Hello</div>`
+  }
+];
+
+const codeEl = document.getElementById("code");
+const previewEl = document.getElementById("preview");
+
+const cursor = document.createElement("span");
+cursor.className = "cursor";
+
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function typeCode(text) {
+  codeEl.textContent = "";
+  codeEl.appendChild(cursor);
+
+  for (const char of text) {
+    cursor.before(char);
+    await wait(25);
+  }
+}
+
+async function updatePreview(html) {
+//previewEl.classList.add("updating");
+  await wait(1000);
+  previewEl.innerHTML = html;
+//previewEl.classList.remove("updating");
+}
+
+async function run() {
+  for (const step of steps) {
+    await typeCode(step.code.trimStart());
+    await updatePreview(step.html);
+    await wait(1000);
+  }
+  await run()
+}
+
+run();
+</script>
+
+</body>
+</html>

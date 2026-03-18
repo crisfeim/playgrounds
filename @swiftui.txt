@@ -1,0 +1,142 @@
+# Testendo SwiftUI sin reference types
+
+La implementación por defecto del patrón MVVM en SwiftUI se suele parecer a esto:
+
+```swift
+
+struct MovieView: View {
+	@State var viewModel = MovieViewModel()
+	var body: some View {
+		List(viewModel.movies, rowContent: MovieRow.init)
+		.task { await viewModel.load() }
+	}
+}
+
+@Observable class MovieViewModel {
+	var movies = [Movie]()
+	var isLoading = true
+	var errorMessage: String?
+	let loader: MoviesLoader
+	
+	func load()  async {
+		isLoading = true
+		defer { isLoading = false }
+		do {
+			movies = try await loader.execute()
+		} catch {
+			errorMessage = makeMessage(from: error)
+		}
+	}
+}
+```
+
+La razón de uso un `@Observable` a pesar de que en *SwiftUI* existe `@State` suele ser el hecho de que `@State` no es testeable ya que *SwiftUI* gestiona el almacenamiento solo cuando la vista se monta en una jerarquía, por lo que en un unit test, un `@State` no almacena nada.
+
+```swift
+struct MovieView: View {
+	@State var movies = [Movie]()
+	@State var isLoading = true
+	@State var errorMessage: String?
+	
+    let loader: MoviesLoader
+    var body: some View { ... }
+    
+    func load() async {...}
+}
+
+func test() async throws {
+	let stubbedMovies = [makeMovie()]
+	let stubLoader = StubedMoviesLoader(movies:  stubbedMovies)
+	let sut = MovieView(loader: stubLoader)
+	await sut.load()
+	XCTAssertEqual(sut.movies, stubbedMovies)
+}
+```
+
+Pero introducir `@Observable` en un sistema declarativo puede introducir riesgos de *memory leaks* (@todo: dar más argumentación).
+
+En lo ideal, es una buena práctica quedarnos con `value types` tanto como sea posible (@todo: dar más argumentación).
+
+A pesar de la limitacion de `@State` , hay una manera de conservar el mismo nivel de testabilidad sin usar *reference types*.
+
+### @Binding
+
+En *SwiftUI* `@Binding`  es simplemente un almacén de closures:
+
+```swift
+struct Binding<Value> {
+	let get: (     ) -> Value
+	let set: (Value) -> Void
+}
+```
+
+`@Binding` permite desplazar la gobernanza del estado hacia fuera:
+
+```swift
+struct MovieView {
+	@Binding var movies: [Movie]
+	@Binding var isLoading: Bool
+	@Binding var errorMessage: String?
+	
+    let loader: MoviesLoader
+    
+    func load() async throws {
+		movies = try await loader.load()
+	}
+}
+```
+
+Dado que son solo *closures*, no hay ninguna razón por la que no podamos testear una vista que use `@Bindings`en lugar de `@State`:
+
+```swift
+func test() async throws {
+	let stubbedMovies = [makeMovie()]
+	let stubLoader = StubedMoviesLoader(movies:  stubbedMovies)
+	let sut = MovieView(
+		movies: .variable([]),
+		isLoading: .variable(true),
+		errorMessage: .variable(nil),
+		loader: stubLoader,
+	)
+	try await sut.load()
+	XCTAssertEqual(sut.movies, stubbedMovies)
+}
+
+extension Binding {
+	static func variable(_ initialValue: Value) -> Binding<Value> {
+		var storage = initialValue
+		return Binding(get: { storage }, set: { storage = $0 })
+	}
+}
+```
+
+Dado que queremos instanciar la vista con una combinación de estados muy específica, podríamos agrupar el estado en un único struct dándole valores por defecto:
+
+```
+struct MovieState {
+	var movies = [Movie]()
+	var isLoading = true
+	var errorMessage: String
+}
+
+struct MovieView: View {
+	@Binding var movie: MovieState
+	let loader: MovieLoader
+}
+
+func test() async throws {
+	let stubbedMovies = [makeMovie()]
+	let stubLoader = StubedMoviesLoader(movies: stubbedMovies)
+	let sut = MovieView(
+		state: .variable(.init()),
+		loader: stubLoader,
+	)
+	try await sut.load()
+	XCTAssertEqual(sut.movies, stubbedMovies)
+}
+```
+
+
+
+
+

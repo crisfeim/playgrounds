@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+	<meta charset="UTF-8">
+	
+	<title></title>
+	
+	<link rel="stylesheet" href="css/bear.css"/>
+	<link rel="stylesheet" href="css/layout.css"/>
+	<style>
+		@media (max-width:768px) {
+			main {left: 100%}
+			#menu-toggle {
+				left: 0;
+			}
+			
+			#menu-checkbox:checked + #menu-toggle,
+			#menu-checkbox:checked ~ nav {
+				left: 100% !important;
+			}
+		}
+	</style>
+</head>
+<body>
+	<!-- @include checkboxes -->
+	<menu><!-- @include menu-content --></menu>
+	<nav><!-- @include nav-content --></nav>
+	<main></main>
+</body>
+</html>

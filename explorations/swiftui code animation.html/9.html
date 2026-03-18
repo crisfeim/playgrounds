@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Code → Preview Animation - Scroll Driven</title>
+<style>
+  :root {
+    --bg: #0b0b0c;
+    --panel: rgba(255,255,255,0.3);
+    --text: #e6e6eb;
+    --blue: #3b82f6;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: var(--bg);
+    color: var(--text);
+    /* Eliminamos la altura de 4000px y bloqueamos el scroll real */
+    overflow: hidden; 
+    height: 100vh;
+  }
+
+  .container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 900px;
+    max-width: 95vw;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .panel {
+    background: var(--panel);
+    padding: 20px;
+    min-height: 220px;
+  }
+
+  .code {
+    white-space: pre-wrap;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  .preview {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+  }
+
+  .text {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont;
+    font-size: 18px;
+    color: white;
+  }
+
+  .p-4 { padding: 16px; }
+  .bg-blue { background: var(--blue); border-radius: 8px; }
+  
+  #preview { background: rgba(255, 255, 255, 0.1) }
+
+  /* Indicador visual opcional */
+  .scroll-hint {
+    position: fixed;
+    bottom: 20px;
+    width: 100%;
+    text-align: center;
+    font-size: 12px;
+    opacity: 0.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="panel">
+    <div id="code" class="code"></div>
+  </div>
+  <div id="preview" class="panel preview"></div>
+</div>
+
+<div class="scroll-hint">Usa la rueda del ratón para avanzar o retroceder</div>
+
+<script>
+const steps = [
+  { code: 'Text("Hello")', html: '<div class="text">Hello</div>' },
+  { code: 'Text("Hello")\n  .background()', html: '<div class="text bg-blue">Hello</div>' },
+  { code: 'Text("Hello")\n  .padding()\n  .background(.blue)', html: '<div class="bg-blue p-4"><span class="text">Hello</span></div>' }
+];
+
+const codeEl = document.getElementById("code");
+const previewEl = document.getElementById("preview");
+
+let currentStep = 0;
+let scrollAccumulator = 0;
+const threshold = 150; // Sensibilidad del scroll (px de delta para cambiar de step)
+
+function showStep(index) {
+  const step = steps[index];
+  codeEl.innerText = step.code;
+  previewEl.innerHTML = step.html;
+}
+
+// Inicializar
+showStep(currentStep);
+
+// Escuchamos el evento 'wheel' en lugar del scroll del body
+window.addEventListener('wheel', (e) => {
+  // e.deltaY es positivo al bajar y negativo al subir
+  scrollAccumulator += e.deltaY;
+
+  if (scrollAccumulator >= threshold) {
+    // Scroll hacia ABAJO -> Siguiente
+    if (currentStep < steps.length - 1) {
+      currentStep++;
+      showStep(currentStep);
+    }
+    scrollAccumulator = 0; // Reset
+  } 
+  else if (scrollAccumulator <= -threshold) {
+    // Scroll hacia ARRIBA -> Anterior
+    if (currentStep > 0) {
+      currentStep--;
+      showStep(currentStep);
+    }
+    scrollAccumulator = 0; // Reset
+  }
+});
+
+// Soporte para gestos táctiles (Swipe Up/Down)
+let touchStartY = 0;
+window.addEventListener('touchstart', (e) => touchStartY = e.touches[0].clientY);
+window.addEventListener('touchmove', (e) => {
+  const touchEndY = e.touches[0].clientY;
+  const diff = touchStartY - touchEndY;
+
+  if (Math.abs(diff) > 50) { // Umbral de swipe
+    if (diff > 0 && currentStep < steps.length - 1) {
+      currentStep++;
+      showStep(currentStep);
+    } else if (diff < 0 && currentStep > 0) {
+      currentStep--;
+      showStep(currentStep);
+    }
+    touchStartY = touchEndY; // Evitar disparos múltiples
+  }
+});
+</script>
+
+</body>
+</html>
