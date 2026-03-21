@@ -1,5 +1,5 @@
 import Foundation
-import NaturalLanguage
+
 
 // MARK: - Domain
 
@@ -85,68 +85,57 @@ func parseWithRegex(_ input: String) -> [Action] {
     return results
 }
 
-// MARK: - 2. NaturalLanguage
+// MARK: - 2. NaturalLanguage + Regex para argumentos
 
-// NL no entiende semántica de dominio por sí solo.
-// Lo usamos para extraer tokens relevantes (verbos, sustantivos)
-// y luego aplicamos nuestra lógica de dominio encima.
+import FoundationModels
 
-func parseWithNaturalLanguage(_ input: String) -> [Action] {
-    var verbs: [String] = []
-    var nouns: [String] = []
+@Generable
+enum ActionKind: String {
+  case createFile
+  case createFolder
+  case deleteFile
+  case renameFile
+  case runCommand
+  case unknown
+}
 
-    let tagger = NLTagger(tagSchemes: [.lexicalClass])
-    tagger.string = input
+@Generable
+struct ParsedAction {
+  let kind: ActionKind
+  let argument: String
+  let secondArgument: String  // para rename: el destino
+}
 
-    tagger.enumerateTags(
-        in: input.startIndex..<input.endIndex,
-        unit: .word,
-        scheme: .lexicalClass,
-        options: [.omitWhitespace, .omitPunctuation]
-    ) { tag, range in
-        let word = String(input[range]).lowercased()
-        switch tag {
-        case .verb:       verbs.append(word)
-        case .noun:       nouns.append(word)
-        default: break
-        }
-        return true
+@Generable
+struct ActionPlan {
+  let actions: [ParsedAction]
+}
+
+func parseWithFoundationModels(_ input: String) async throws -> [Action] {
+  let session = LanguageModelSession()
+  
+  let plan = try await session.respond(
+    to: """
+    Parse this command into a list of file system actions.
+    The argument field contains the file/folder path or shell command.
+    For rename actions, argument is the source and secondArgument is the destination.
+    If the intent is unclear, use unknown.
+    
+    Command: "\(input)"
+    """,
+    generating: ActionPlan.self
+  )
+  
+  return plan.content.actions.map { parsed in
+    switch parsed.kind {
+      case .createFile:   return .createFile(path: parsed.argument)
+      case .createFolder: return .createFolder(path: parsed.argument)
+      case .deleteFile:   return .deleteFile(path: parsed.argument)
+      case .renameFile:   return .renameFile(from: parsed.argument, to: parsed.secondArgument)
+      case .runCommand:   return .runCommand(command: parsed.argument)
+      case .unknown:      return .unknown(input: parsed.argument)
     }
-
-    // Mapeo de verbos a intenciones
-    let createVerbs  = ["create", "make", "add", "touch", "new"]
-    let deleteVerbs  = ["delete", "remove", "rm"]
-    let renameVerbs  = ["rename", "move", "mv"]
-    let runVerbs     = ["run", "execute", "launch"]
-    let folderNouns  = ["folder", "directory", "dir"]
-
-    guard let verb = verbs.first else {
-        return [.unknown(input: input)]
-    }
-
-    let argument = nouns.last ?? ""
-
-    if deleteVerbs.contains(verb) {
-        return [.deleteFile(path: argument)]
-    }
-    if runVerbs.contains(verb) {
-        return [.runCommand(command: argument)]
-    }
-    if renameVerbs.contains(verb) {
-        let from = nouns.first ?? ""
-        let to   = nouns.last  ?? ""
-        return [.renameFile(from: from, to: to)]
-    }
-    if createVerbs.contains(verb) {
-        let isFolder = folderNouns.contains(where: { nouns.contains($0) })
-        if isFolder {
-            return [.createFolder(path: argument)]
-        } else {
-            return [.createFile(path: argument)]
-        }
-    }
-
-    return [.unknown(input: input)]
+  }
 }
 
 // MARK: - Demo
@@ -177,5 +166,5 @@ let tests = [
 for test in tests {
     print("\nInput: \"\(test)\"")
 //  printActions(parseWithRegex(test),           label: "Regex")
-  printActions(parseWithNaturalLanguage(test), label: "NaturalLanguage")
+  try await printActions(parseWithFoundationModels(test), label: "NaturalLanguage")
 }
