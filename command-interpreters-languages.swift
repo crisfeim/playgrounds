@@ -73,23 +73,39 @@ func detectLanguage(_ input: String) -> String {
 
 // MARK: - Normalization
 
-func normalize(_ input: String, languageCode: String? = nil) -> String {
-    let lang = languageCode ?? detectLanguage(input)
+// MARK: - Language detection
 
-    // Merge: language-specific dict + English fallback
-    var dict = synonymDicts["en"] ?? [:]
-    if lang != "en", let langDict = synonymDicts[lang] {
-        dict.merge(langDict) { _, new in new }
+func detectLanguages(_ input: String) -> Set<String> {
+    let recognizer = NLLanguageRecognizer()
+    recognizer.processString(input)
+    
+    // Get all hypotheses with probability > 0.1
+    let hypotheses = recognizer.languageHypotheses(withMaximum: 5)
+    let detected = hypotheses
+        .filter { $0.value > 0.1 }
+        .map { $0.key.rawValue }
+    
+    // Always include English as base
+    return Set(detected).union(["en"])
+}
+
+// MARK: - Normalization
+
+func normalize(_ input: String) -> String {
+    let detectedLangs = detectLanguages(input)
+    
+    // Merge only dicts for detected languages
+    var dict = [String: String]()
+    for lang in detectedLangs {
+        if let langDict = synonymDicts[lang] {
+            dict.merge(langDict) { _, new in new }
+        }
     }
-
+    
     var result = input.lowercased()
-
-    // Sort by length descending so longer phrases match before shorter ones
-    // e.g. "crear archivo" matches before "crear"
     let sorted = dict.sorted { $0.key.count > $1.key.count }
-
+    
     for (synonym, canonical) in sorted {
-        // Word boundary aware replacement
         let pattern = "(?i)\\b\(NSRegularExpression.escapedPattern(for: synonym))\\b"
         if let re = try? NSRegularExpression(pattern: pattern) {
             let range = NSRange(result.startIndex..., in: result)
@@ -97,7 +113,7 @@ func normalize(_ input: String, languageCode: String? = nil) -> String {
                                                   withTemplate: canonical)
         }
     }
-
+    
     return result
 }
 
@@ -172,24 +188,21 @@ func printActions(_ actions: [Action], label: String) {
     }
 }
 
-let tests: [(input: String, lang: String?)] = [
-    // English
-    ("make main.swift", nil),
-    ("mkdir src then touch src/index.html", nil),
-    ("delete build", nil),
-    ("rename old.swift to new.swift", nil),
-    ("run swift main.swift", nil),
-    // Spanish
-    ("crear archivo main.swift", nil),
-    ("borrar build luego ejecutar swift main.swift", nil),
-    ("crear carpeta src luego crear archivo src/index.html", nil),
-    // Mixed (forced lang detection)
-    ("make main.swift then borrar old.swift", nil),
+let tests = [
+    "make main.swift",
+    "mkdir src then touch src/index.html",
+    "delete build",
+    "rename old.swift to new.swift",
+    "run swift main.swift",
+    "crear archivo main.swift",
+    "borrar build thn ejecutar swift main.swift",
+    "crear carpeta src luego crear archivo src/index.html",
+    "make main.swift then delete old.swift",
 ]
 
 for test in tests {
-    print("\nInput: \"\(test.input)\"")
-    let detected = detectLanguage(test.input)
-    print("  Detected language: \(detected)")
-    printActions(parse(test.input), label: "Result")
+    print("\nInput: \"\(test)\"")
+    let langs = detectLanguages(test)
+    print("  Detected languages: \(langs.sorted().joined(separator: ", "))")
+    printActions(parse(test), label: "Result")
 }
